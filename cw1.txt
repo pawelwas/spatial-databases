@@ -1,0 +1,164 @@
+1.
+
+CREATE DATABASE s292630;
+
+2.
+
+CREATE SCHEMA firma;
+
+3.
+
+CREATE ROLE ksiegowosc;
+    
+ALTER DEFAULT PRIVILEGES IN SCHEMA firma
+    GRANT SELECT ON TABLES TO ksiegowosc;
+
+4.  
+
+CREATE TABLE firma.pracownicy
+(
+    adres character varying(255),
+    id_pracownika serial NOT NULL,
+    imie character varying(255),
+    nazwisko character varying(255),
+    telefon numeric(9)
+);
+
+CREATE TABLE firma.godziny
+(
+    id_godziny serial NOT NULL,
+    data date,
+    liczba_godzin integer,
+    id_pracownika integer NOT NULL
+);
+
+CREATE TABLE firma.pensja_stanowisko
+(
+    id_pensji serial NOT NULL,
+    stanowisko character varying(255),
+    kwota integer
+);
+
+CREATE TABLE firma.premia
+(
+    id_premii serial NOT NULL,
+    rodzaj character varying(255),
+    kwota integer
+);
+
+CREATE TABLE firma.wynagrodzenie
+(
+    id_wynagrodzenia serial NOT NULL,
+    data date,
+    id_pracownika integer NOT NULL,
+    id_godziny integer NOT NULL,
+    id_pensji integer NOT NULL,
+    id_premii integer NOT NULL
+);
+
+ALTER TABLE firma.pracownicy
+    ADD PRIMARY KEY (id_pracownika);
+
+ALTER TABLE firma.godziny
+    ADD PRIMARY KEY (id_godziny);
+
+ALTER TABLE firma.pensja_stanowisko
+    ADD PRIMARY KEY (id_pensji);
+
+ALTER TABLE firma.premia
+    ADD PRIMARY KEY (id_premii);
+
+ALTER TABLE firma.wynagrodzenie
+    ADD PRIMARY KEY (id_wynagrodzenia);
+
+ALTER TABLE firma.godziny
+    ADD FOREIGN KEY (id_pracownika)
+    REFERENCES firma.pracownicy (id_pracownika) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+ALTER TABLE firma.wynagrodzenie
+    ADD FOREIGN KEY (id_pracownika)
+    REFERENCES firma.pracownicy (id_pracownika) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+ALTER TABLE firma.wynagrodzenie
+    ADD FOREIGN KEY (id_godziny)
+    REFERENCES firma.godziny (id_godziny) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+ALTER TABLE firma.wynagrodzenie
+    ADD FOREIGN KEY (id_pensji)
+    REFERENCES firma.pensja_stanowisko (id_pensji) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+ALTER TABLE firma.wynagrodzenie
+    ADD FOREIGN KEY (id_premii)
+    REFERENCES firma.premia (id_premii) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+COMMENT ON TABLE firma.pracownicy
+    IS 'Tabela pracowników';
+
+COMMENT ON TABLE firma.godziny
+    IS 'Tabela godzin pracy pracowników';
+
+COMMENT ON TABLE firma.pensja_stanowisko
+    IS 'Tabela pensji na danych stanowiskach';
+
+COMMENT ON TABLE firma.premia
+    IS 'Tabela premii dla pracowników';
+
+COMMENT ON TABLE firma.wynagrodzenie
+    IS 'Tabela wynagrodzeń pracowników';
+
+5.
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Warszawa'::character varying, 'Mariusz'::character varying, 'Kołodziej'::character varying, '567213938'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Kraków'::character varying, 'Piotr '::character varying, 'Ziębiński'::character varying, '764284680'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Wrocław'::character varying, 'Janusz'::character varying, 'Tracz'::character varying, '625163626'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Gdańsk'::character varying, 'Krystian'::character varying, 'Kortan'::character varying, '732837278'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Szczecin'::character varying, 'Janina'::character varying, 'Tapanowa'::character varying, '532283722'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Siedlce'::character varying, 'Urszula'::character varying, 'Fałek'::character varying, '632872873'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Rzeszów'::character varying, 'Marek'::character varying, 'Dońca'::character varying, '832732737'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Katowice'::character varying, 'Ireneusz'::character varying, 'Piech'::character varying, '521091029'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Łódź'::character varying, 'Ewa'::character varying, 'Kalińska'::character varying, '623238923'::numeric);
+
+INSERT INTO firma.pracownicy (
+adres, imie, nazwisko, telefon) VALUES (
+'Elbląg'::character varying, 'Michał'::character varying, 'Robak'::character varying, '724230320'::numeric);
