@@ -15,6 +15,8 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA firma
 
 4.  
 
+a)
+
 CREATE TABLE firma.pracownicy
 (
     adres character varying(255),
@@ -56,6 +58,8 @@ CREATE TABLE firma.wynagrodzenie
     id_premii integer NOT NULL
 );
 
+b)
+
 ALTER TABLE firma.pracownicy
     ADD PRIMARY KEY (id_pracownika);
 
@@ -70,6 +74,8 @@ ALTER TABLE firma.premia
 
 ALTER TABLE firma.wynagrodzenie
     ADD PRIMARY KEY (id_wynagrodzenia);
+
+c)
 
 ALTER TABLE firma.godziny
     ADD FOREIGN KEY (id_pracownika)
@@ -106,6 +112,13 @@ ALTER TABLE firma.wynagrodzenie
     ON DELETE NO ACTION
     NOT VALID;
 
+d)
+
+CREATE INDEX imie_idx ON firma.pracownicy (imie);
+CREATE INDEX nazwisko_idx ON firma.pracownicy (nazwisko);
+
+e)
+
 COMMENT ON TABLE firma.pracownicy
     IS 'Tabela pracowników';
 
@@ -121,44 +134,136 @@ COMMENT ON TABLE firma.premia
 COMMENT ON TABLE firma.wynagrodzenie
     IS 'Tabela wynagrodzeń pracowników';
 
+f)
+
+Więzy integralności zostały ustawione na brak akcji przy tworzeniu kluczy obcych
+
 5.
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Warszawa'::character varying, 'Mariusz'::character varying, 'Kołodziej'::character varying, '567213938'::numeric);
+a)
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Kraków'::character varying, 'Piotr '::character varying, 'Ziębiński'::character varying, '764284680'::numeric);
+ALTER TABLE firma.godziny
+    ADD COLUMN miesiac integer GENERATED ALWAYS AS (date_part('month'::text, data)) STORED;
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Wrocław'::character varying, 'Janusz'::character varying, 'Tracz'::character varying, '625163626'::numeric);
+ALTER TABLE firma.godziny
+    ADD COLUMN numer_tygodnia integer GENERATED ALWAYS AS (extract(week from data)) STORED;
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Gdańsk'::character varying, 'Krystian'::character varying, 'Kortan'::character varying, '732837278'::numeric);
+b)
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Szczecin'::character varying, 'Janina'::character varying, 'Tapanowa'::character varying, '532283722'::numeric);
+ALTER TABLE firma.wynagrodzenie ALTER COLUMN date TYPE text;
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Siedlce'::character varying, 'Urszula'::character varying, 'Fałek'::character varying, '632872873'::numeric);
+c)
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Rzeszów'::character varying, 'Marek'::character varying, 'Dońca'::character varying, '832732737'::numeric);
+UPDATE firma.premia
+SET kwota = 0
+WHERE rodzaj = 'brak';
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Katowice'::character varying, 'Ireneusz'::character varying, 'Piech'::character varying, '521091029'::numeric);
+6)
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Łódź'::character varying, 'Ewa'::character varying, 'Kalińska'::character varying, '623238923'::numeric);
+a)
 
-INSERT INTO firma.pracownicy (
-adres, imie, nazwisko, telefon) VALUES (
-'Elbląg'::character varying, 'Michał'::character varying, 'Robak'::character varying, '724230320'::numeric);
+SELECT id_pracownika, nazwisko FROM firma.pracownicy;
+
+b)
+
+SELECT pracownicy.id_pracownika FROM firma.pracownicy JOIN firma.wynagrodzenie ON firma.pracownicy.id_pracownika = firma.wynagrodzenie.id_pracownika 
+JOIN firma.pensja_stanowisko ON firma.wynagrodzenie.id_pensji = firma.pensja_stanowisko.id_pensji WHERE kwota > 1000;
+
+c)
+
+SELECT pracownicy.id_pracownika FROM firma.pracownicy JOIN firma.wynagrodzenie ON pracownicy.id_pracownika = wynagrodzenie.id_pracownika JOIN firma.pensja_stanowisko 
+ON wynagrodzenie.id_pensji = pensja_stanowisko.id_pensji JOIN firma.premia ON wynagrodzenie.id_premii = premia.id_premii WHERE premia.rodzaj LIKE 'brak' AND pensja_stanowisko.kwota > 2000;
+
+d)
+
+SELECT * FROM firma.pracownicy WHERE imie LIKE 'J%';
+
+e)
+
+SELECT * FROM firma.pracownicy WHERE LOWER(nazwisko) LIKE '%n%' AND imie LIKE '%a';
+
+f)
+
+SELECT imie, nazwisko, liczba_godzin-160 AS nadgodziny FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika 
+JOIN firma.godziny ON godziny.id_godziny = wynagrodzenie.id_godziny WHERE liczba_godzin > 160;
+
+g)
+
+SELECT imie, nazwisko FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika JOIN firma.pensja_stanowisko 
+ON wynagrodzenie.id_pensji = pensja_stanowisko.id_pensji WHERE kwota >= 1500 AND kwota <= 3000;
+
+h)
+
+SELECT imie, nazwisko FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika JOIN firma.godziny 
+ON godziny.id_godziny = wynagrodzenie.id_godziny JOIN firma.premia ON premia.id_premii = wynagrodzenie.id_premii WHERE liczba_godzin > 160 AND rodzaj LIKE 'brak';
+
+7.
+
+a)
+
+SELECT imie, nazwisko, kwota FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika JOIN firma.pensja_stanowisko 
+ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji ORDER BY kwota;
+
+b)
+
+SELECT imie, nazwisko, pensja_stanowisko.kwota, premia.kwota FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika 
+JOIN firma.pensja_stanowisko ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji JOIN firma.premia ON premia.id_premii = wynagrodzenie.id_premii ORDER BY pensja_stanowisko.kwota ASC, premia.kwota DESC;
+
+c)
+
+SELECT stanowisko, COUNT(pracownicy.id_pracownika) FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika 
+JOIN firma.pensja_stanowisko ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji GROUP BY stanowisko;
+
+d)
+
+SELECT AVG(pensja_stanowisko.kwota)::numeric(10,2) , MIN(pensja_stanowisko.kwota), MAX(pensja_stanowisko.kwota) FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika 
+JOIN firma.pensja_stanowisko ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji WHERE stanowisko LIKE 'kierownik';
+
+e)
+
+SELECT SUM(kwota) FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika JOIN firma.pensja_stanowisko ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji;
+
+f)
+
+SELECT stanowisko, SUM(kwota) FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika JOIN firma.pensja_stanowisko 
+ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji GROUP BY stanowisko;
+
+g)
+
+SELECT stanowisko, COUNT(pracownicy.id_pracownika) FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika JOIN firma.pensja_stanowisko 
+ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji JOIN firma.premia ON premia.id_premii = wynagrodzenie.id_premii WHERE rodzaj NOT LIKE 'brak' GROUP BY stanowisko;
+
+h)
+
+DELETE FROM firma.pracownicy WHERE pracownicy.id_pracownika IN (SELECT pracownicy.id_pracownika FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika 
+JOIN firma.pensja_stanowisko ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji WHERE kwota < 1200);
+
+8.
+
+ALTER TABLE firma.pracownicy ALTER COLUMN telefon TYPE character varying(17);
+
+a)
+
+UPDATE firma.pracownicy SET telefon = CONCAT('(+48)', telefon);
+
+b)
+
+UPDATE firma.pracownicy SET telefon = CONCAT(LEFT(telefon, 5), ' ', SUBSTRING(telefon, 6, 3), '-', SUBSTRING(telefon, 9, 3), '-', RIGHT(telefon, 3));
+
+c)
+
+SELECT id_pracownika, UPPER(imie), UPPER(nazwisko), UPPER(adres), telefon FROM firma.pracownicy ORDER BY LENGTH(nazwisko) DESC LIMIT 1;
+
+d)
+
+SELECT MD5(CONCAT(pracownicy.id_pracownika, imie, nazwisko, adres, telefon, kwota)) FROM firma.pracownicy JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika 
+JOIN firma.pensja_stanowisko ON pensja_stanowisko.id_pensji = wynagrodzenie.id_pensji;
+
+9.
+
+SELECT CONCAT('Pracownik ', pracownicy.imie, ' ', pracownicy.nazwisko, ', w dniu ', godziny.data,' otrzymal pensje calkowita na kwote ', (pensja_stanowisko.kwota + premia.kwota), ', gdzie wynagrodzenie zasadnicze wynosilo: ', 
+pensja_stanowisko.kwota, ' zl, premia:', premia.kwota, ' zl, liczba nadgodzin: ', (CASE WHEN godziny.liczba_godzin <= 160 THEN 0 ELSE (godziny.liczba_godzin-160) END)) FROM firma.pracownicy INNER JOIN firma.wynagrodzenie ON wynagrodzenie.id_pracownika = pracownicy.id_pracownika 
+INNER JOIN firma.godziny ON godziny.id_godziny = wynagrodzenie.id_godziny INNER JOIN firma.pensja_stanowisko ON wynagrodzenie.id_pensji = pensja_stanowisko.id_pensji INNER JOIN firma.premia ON premia.id_premii = wynagrodzenie.id_premii;
+
+
+
