@@ -1,1 +1,1 @@
-# spatial-databases
+Spatial databases university course
